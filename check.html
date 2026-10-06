@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فحص وتر PWA</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#07070d;color:#fff;padding:24px;line-height:1.7}
+main{max-width:720px;margin:auto}h1{font-size:1.4rem}.ok{color:#70e000}.bad{color:#ff5c5c}
+li{margin:8px 0}
+</style>
+</head>
+<body><main><h1>فحص وتر PWA</h1><ul id="r"></ul></main>
+<script>
+const files=["index.html","manifest.webmanifest","sw.js","storage.js","icon-192.png","icon-512.png","maskable-192.png","maskable-512.png","apple-touch-icon.png","favicon-32.png","check.html"];
+const r=document.getElementById("r");
+function row(t,ok){const li=document.createElement("li");li.className=ok?"ok":"bad";li.textContent=(ok?"✓ ":"✗ ")+t;r.appendChild(li);}
+Promise.all(files.map(f=>fetch("./"+f,{cache:"no-store"}).then(x=>row(f+" — "+x.status,x.ok)).catch(()=>row(f+" — خطأ",false))))
+.then(async()=>{
+  try{
+    const m=await fetch("./manifest.webmanifest",{cache:"no-store"}).then(x=>x.json());
+    const ok=m.name==="وتر"&&m.short_name==="وتر"&&m.start_url==="./index.html"&&m.scope==="./"&&m.display==="standalone"&&m.lang==="ar"&&m.dir==="rtl";
+    row("manifest — الحقول الأساسية",ok);
+  }catch(e){row("manifest — تعذر القراءة",false)}
+  if("serviceWorker" in navigator){
+    try{const reg=await navigator.serviceWorker.register("./sw.js",{scope:"./"});row("Service Worker — مسجل",!!reg);}
+    catch(e){row("Service Worker — فشل التسجيل",false)}
+  }else row("Service Worker — غير مدعوم",false);
+});
+</script>
+</body></html>
